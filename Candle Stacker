@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAPPY BİRTHDAY!</title>
+<style>
+  :root { --ink:#633d59; --pink:#f7c7d5; --cream:#fff9f1; --purple:#d8c8f4; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; font-family:"Trebuchet MS",Arial,sans-serif;
+    color:var(--ink);
+    background:radial-gradient(circle at 10% 10%, #fff 0 3px, transparent 4px),
+               linear-gradient(135deg,#fff3f7,#fff9e9 48%,#f0f7ff);
+    background-size:34px 34px, auto;
+  }
+  header { text-align:center; padding:28px 16px 12px; }
+  h1 { margin:0; color:#c04f82; font-size:clamp(2rem,5vw,3.7rem); letter-spacing:2px;
+       text-shadow:2px 3px 0 #fff, 4px 5px 0 #f4d1df; }
+  .subtitle { margin:10px 0 0; font-size:1.08rem; color:#87617c; }
+  .toolbar { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; padding:12px 16px 22px; }
+  button { font:inherit; cursor:pointer; border:0; border-radius:999px; padding:10px 16px; font-weight:700;
+           box-shadow:0 3px 0 #d9b6c9; transition:transform .12s, box-shadow .12s; }
+  button:active { transform:translateY(2px); box-shadow:0 1px 0 #d9b6c9; }
+  .add-all { background:#f7c7d5; color:#713d5a; }
+  .remove-all { background:#e3d8fa; color:#594778; }
+  .hint { color:#96758d; font-size:.9rem; }
+  .grid { width:min(1120px,94%); margin:0 auto 36px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
+  .month-card { background:rgba(255,255,255,.82); border:2px solid #fff; border-radius:22px; padding:12px 8px 14px;
+                text-align:center; box-shadow:0 7px 18px #a57a8b1c; }
+  .month { font-weight:800; font-size:1rem; letter-spacing:1px; margin:3px 0 0; }
+  .cupcake-button { display:block; width:100%; background:transparent; box-shadow:none; padding:4px 0 0; border-radius:14px; }
+  .cupcake-button:focus-visible { outline:3px solid #b18be0; outline-offset:2px; }
+  .cupcake-button svg { display:block; width:min(100%,170px); height:auto; margin:auto; overflow:visible; }
+  .count { font-size:.84rem; color:#9a7790; margin-top:4px; min-height:1.2em; }
+  .footer { text-align:center; padding:0 16px 30px; color:#98758c; font-size:.9rem; }
+  .sparkle { display:inline-block; animation:twinkle 1.8s ease-in-out infinite; }
+  @keyframes twinkle { 50% { transform:rotate(15deg) scale(1.18); } }
+  @media(max-width:760px) { .grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; } }
+  @media(max-width:480px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .month-card { padding:10px 6px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎉 HAPPY BİRTHDAY! 🎂</h1>
+  <p class="subtitle">Let's celebrate every birthday! <span class="sparkle">✨</span></p>
+</header>
+<div class="toolbar">
+  <button class="add-all" id="addAll">🕯️ Add a candle to every cupcake</button>
+  <button class="remove-all" id="reset">↻ Start again</button>
+  <span class="hint">Click a cupcake to add a candle!</span>
+</div>
+<main class="grid" id="cupcakeGrid" aria-label="Cupcakes for the twelve months"></main>
+<div class="footer">One cupcake for every month • Every birthday is special! 💖</div>
+<script>
+const months = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+const colors = ["#f3a9b8","#d8bdf3","#f6d27f","#a9dfc0","#f5b9cf","#a9d9f1","#f3a9b8","#f6d27f","#bac9f3","#f2b18e","#cbb8e9","#a9dfc0"];
+const candles = Array(12).fill(0);
+const grid = document.getElementById("cupcakeGrid");
+
+
+
+// Human-sung Happy Birthday recording, released under CC0 by BigSoundBank.
+const birthdayVoice = new Audio("https://musicbeats.net/wp-content/uploads/2023/07/HAPPY-BIRTHDAY-traditional-.mp3");
+birthdayVoice.preload = "auto";
+let birthdayVoiceTimer = null;
+
+function playApplause() {
+  // Play a short opening section of the human-sung recording.
+  try {
+    if (birthdayVoiceTimer) clearTimeout(birthdayVoiceTimer);
+    birthdayVoice.pause();
+    birthdayVoice.currentTime = 0;
+    const playPromise = birthdayVoice.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        // The game still works if the external audio host is unavailable.
+      });
+    }
+    birthdayVoiceTimer = setTimeout(() => {
+      birthdayVoice.pause();
+      birthdayVoice.currentTime = 0;
+      birthdayVoiceTimer = null;
+    }, 6000);
+  } catch (error) {
+    // The game remains playable if audio is unavailable.
+  }
+}
+
+function cupcakeSVG(index, count) {
+  let candleMarkup = "";
+  const shown = Math.min(count, 18);
+  const spacing = 9;
+  const startX = 85 - ((shown - 1) * spacing) / 2;
+  for (let i = 0; i < shown; i++) {
+    const x = startX + i * spacing;
+    const y = 43 - (i % 2) * 3;
+    candleMarkup += `<g><path d="M${x} ${y} v-17" stroke="${["#e76f91","#6daedb","#9b83d5","#f2a541"][i%4]}" stroke-width="5" stroke-linecap="round"/><path d="M${x} ${y-23} q-6 6 0 9 q6-3 0-9" fill="#ff9a42"/></g>`;
+  }
+  const extra = count > 18 ? `<text x="85" y="28" font-size="12" font-weight="bold" text-anchor="middle" fill="#7b4c69">+${count-18}</text>` : "";
+  return `<svg viewBox="0 0 170 132" role="img" aria-label="${count} candles on ${months[index].toLowerCase()} cupcake">
+    <ellipse cx="85" cy="119" rx="48" ry="6" fill="#eadde5"/>
+    ${candleMarkup}${extra}
+    <path d="M43 68 L127 68 L117 111 Q85 120 53 111 Z" fill="${colors[index]}" stroke="#d9a7bc" stroke-width="1.5"/>
+    <path d="M40 69 Q43 55 55 62 Q66 46 78 60 Q91 47 103 61 Q116 51 125 63 Q132 61 130 70 Q118 80 107 71 Q96 83 84 72 Q70 83 59 72 Q47 79 40 69Z" fill="#fff9f0" stroke="#e8bdce" stroke-width="1.5"/>
+    <path d="M60 83 l4 5 M85 90 l4 5 M108 81 l4 5" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="68" cy="69" r="2" fill="#f1a4b9"/><circle cx="99" cy="67" r="2" fill="#bba2eb"/>
+    <path d="M55 108 Q85 117 115 108" fill="none" stroke="#fff4f7" stroke-width="2"/>
+  </svg>`;
+}
+function render() {
+  grid.innerHTML = months.map((month, i) => `
+    <section class="month-card">
+      <button class="cupcake-button" data-index="${i}" aria-label="Add a candle to ${month.toLowerCase()} cupcake">
+        ${cupcakeSVG(i, candles[i])}
+      </button>
+      <div class="month">${month}</div>
+      <div class="count">${candles[i]} ${candles[i] === 1 ? "candle" : "candles"}</div>
+    </section>`).join("");
+  grid.querySelectorAll(".cupcake-button").forEach(button => {
+    button.addEventListener("click", () => { candles[Number(button.dataset.index)]++; render(); playApplause(); });
+  });
+}
+document.getElementById("addAll").addEventListener("click", () => { for (let i=0;i<candles.length;i++) candles[i]++; render(); playApplause(); });
+document.getElementById("reset").addEventListener("click", () => { candles.fill(0); render(); });
+render();
+</script>
+</body>
+</html>
